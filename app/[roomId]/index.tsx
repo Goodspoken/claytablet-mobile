@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator, Text, Alert } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, FlatList, StyleSheet, ActivityIndicator, Text, Alert, TextInput, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { useRoom, RoomItem } from '../../hooks/useRoom';
 import { useClipboard } from '../../hooks/useClipboard';
@@ -15,9 +15,10 @@ export default function BoardScreen() {
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
   const { t } = useTranslation();
   const theme = useThemeColor();
-  const { items, loading, error, wsStatus, fetchRoom, addItem, deleteItem } = useRoom(roomId || '');
+  const { items, loading, error, wsStatus, fetchRoom, addItem, deleteItem, setPassword, requiresPassword } = useRoom(roomId || '');
   const { clipboardContent, clearClipboardContent } = useClipboard();
   const flatListRef = useRef<FlatList>(null);
+  const [passwordInput, setPasswordInput] = useState('');
 
   useEffect(() => {
     if (clipboardContent) {
@@ -44,6 +45,11 @@ export default function BoardScreen() {
     ]);
   };
 
+  const handlePasswordSubmit = () => {
+    setPassword(passwordInput);
+    fetchRoom(passwordInput);
+  };
+
   const renderItem = ({ item }: { item: RoomItem }) => (
     <View style={styles.itemContainer}>
       {item.type === 'text' && item.content && (
@@ -60,15 +66,38 @@ export default function BoardScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Stack.Screen 
-        options={{ 
+      <Stack.Screen
+        options={{
           title: roomId,
           headerRight: () => <ConnectionStatus status={wsStatus} />
-        }} 
+        }}
       />
-      
+
       {loading && items.length === 0 ? (
         <ActivityIndicator style={styles.loader} size="large" color={theme.tint} />
+      ) : requiresPassword ? (
+        <View style={styles.passwordContainer}>
+          <Text style={[styles.passwordTitle, { color: theme.text }]}>
+            {t('roomPasswordProtected') ?? 'This room is password protected'}
+          </Text>
+          <TextInput
+            style={[styles.passwordInput, { color: theme.text, borderColor: theme.border, backgroundColor: theme.card }]}
+            secureTextEntry
+            placeholder={t('enterPassword') ?? 'Enter password'}
+            placeholderTextColor={theme.tabIconDefault}
+            value={passwordInput}
+            onChangeText={setPasswordInput}
+            onSubmitEditing={handlePasswordSubmit}
+            returnKeyType="go"
+            autoFocus
+          />
+          <TouchableOpacity
+            style={[styles.passwordButton, { backgroundColor: theme.tint }]}
+            onPress={handlePasswordSubmit}
+          >
+            <Text style={styles.passwordButtonText}>{t('enter') ?? 'Enter'}</Text>
+          </TouchableOpacity>
+        </View>
       ) : error ? (
         <Text style={[styles.error, { color: theme.danger }]}>{error}</Text>
       ) : (
@@ -83,7 +112,7 @@ export default function BoardScreen() {
         />
       )}
 
-      <BottomBar roomId={roomId} />
+      {!requiresPassword && <BottomBar roomId={roomId} />}
     </View>
   );
 }
@@ -93,5 +122,34 @@ const styles = StyleSheet.create({
   loader: { flex: 1, justifyContent: 'center' },
   error: { padding: 16, textAlign: 'center' },
   listContent: { padding: 16, paddingBottom: 32 },
-  itemContainer: { marginBottom: 8 }
+  itemContainer: { marginBottom: 8 },
+  passwordContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  passwordTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  passwordInput: {
+    width: '100%',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 48,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  passwordButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  passwordButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

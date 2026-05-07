@@ -16,10 +16,14 @@ export function useRoom(roomId: string) {
   const [items, setItems] = useState<RoomItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [password, setPassword] = useState<string | null>(null);
 
-  const fetchRoom = useCallback(async () => {
+  const requiresPassword = error === 'REQUIRES_PASSWORD';
+
+  const fetchRoom = useCallback(async (pw?: string) => {
     try {
-      const data = await API.getRoom(roomId);
+      const usedPassword = pw !== undefined ? pw : password;
+      const data = await API.getRoom(roomId, usedPassword ?? undefined);
       const all: RoomItem[] = [
         ...(data.texts  || []),
         ...(data.images || []),
@@ -34,7 +38,7 @@ export function useRoom(roomId: string) {
     } finally {
       setLoading(false);
     }
-  }, [roomId]);
+  }, [roomId, password]);
 
   const { status: wsStatus } = useWebSocket(roomId, fetchRoom);
 
@@ -55,5 +59,5 @@ export function useRoom(roomId: string) {
     await API.deleteItem(roomId, itemId);
   };
 
-  return { items, loading, error, wsStatus, fetchRoom, addItem, deleteItem };
+  return { items, loading, error, wsStatus, fetchRoom, addItem, deleteItem, password, setPassword, requiresPassword };
 }

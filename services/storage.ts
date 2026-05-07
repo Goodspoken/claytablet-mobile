@@ -43,5 +43,18 @@ export const Storage = {
   },
   async setRoomCache(roomId: string, data: object[]) {
     await AsyncStorage.setItem(`room_cache_${roomId}`, JSON.stringify(data));
+  },
+  async getUser(): Promise<{ id: string; name: string; email: string; picture?: string; provider: string } | null> {
+    try {
+      const v = await AsyncStorage.getItem('claytablet_user');
+      return v ? JSON.parse(v) : null;
+    } catch { return null; }
+  },
+  async setUser(user: object) {
+    await AsyncStorage.setItem('claytablet_user', JSON.stringify(user));
+  },
+  async clearUser() {
+    await AsyncStorage.removeItem('claytablet_user');
+    await SecureStore.deleteItemAsync('claytablet_token');
   }
 };

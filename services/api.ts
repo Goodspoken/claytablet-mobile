@@ -20,6 +20,7 @@ export const API = {
     const headers: Record<string, string> = {};
     if (password) headers['X-Room-Password'] = password;
     const res = await this.fetchWithAuth(`/api/claytablet/${roomId}`, { headers });
+    if (res.status === 401) throw new Error('REQUIRES_PASSWORD');
     if (!res.ok) throw new Error('Failed to load room');
     return res.json();
   },
@@ -56,5 +57,12 @@ export const API = {
   async clearRoom(roomId: string) {
     const res = await this.fetchWithAuth(`/api/claytablet/${roomId}/all`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to clear room');
+  },
+
+  async logout(serverUrl: string, token: string) {
+    await fetch(`${serverUrl}/api/auth/logout`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
   }
 };
