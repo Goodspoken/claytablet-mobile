@@ -37,6 +37,10 @@ const translations = {
     confirmDelete: 'Delete this item?',
     noCameraAccess: 'No camera access',
     requestAccess: 'Request Access',
+    signIn: 'Sign In',
+    roomPasswordProtected: 'This room is password protected',
+    enterPassword: 'Enter password',
+    enter: 'Enter',
   },
   ru: {
     home: 'Главная',
@@ -74,6 +78,10 @@ const translations = {
     confirmDelete: 'Удалить эту запись?',
     noCameraAccess: 'Нет доступа к камере',
     requestAccess: 'Разрешить доступ',
+    signIn: 'Войти',
+    roomPasswordProtected: 'Комната защищена паролем',
+    enterPassword: 'Введите пароль',
+    enter: 'Войти',
   }
 };
 
